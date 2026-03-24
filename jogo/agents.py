@@ -14,28 +14,29 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 import os
 
+from langchain_openai import ChatOpenAI
+
+
 # ==============================
 # LLM
 # ==============================
 
 def get_llm():
     return ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash-lite",
+        model="gemini-2.5-flash",
         temperature=0.7,
         google_api_key=os.getenv("GOOGLE_API_KEY"),
     )
 
 
-# ==============================
-# ESTADO DO JOGO
-# ==============================
+
 class EstadoJogo:
  
     def __init__(self):
         self.historia: str = ""
         self.solucao: dict = {}
         self.alibis: dict = {}
-        self.personagens: list = []  # [{"id", "nome", "papel", "genero"}]
+        self.personagens: list = [] 
         self.historico: list = []
         self.tentativas: int = 0
         self.max_tentativas: int = 5
@@ -112,51 +113,71 @@ class EstadoJogo:
 
 _story_prompt = ChatPromptTemplate.from_messages([
     ("system", """Você é o narrador de um jogo de mistério de assassinato no estilo Murdle.
-Gere um mistério curto e atmosférico. O crime ocorreu em uma mansão durante uma tempestade.
 
-Crie 3 personagens únicos com nomes e papéis inventados por você.
-Para cada personagem, defina: nome (ex: "Conde Viktor"), papel (ex: "mordomo"), gênero ("m" ou "f").
-Locais: Invente livremente UM local específico na mansão (ex: "biblioteca").
-Armas: Invente livremente UMA arma ou método (ex:"faca").
-REGRA DE COERÊNCIA CRÍTICA: A arma, o local e a narrativa devem ser totalmente lógicos e realistas entre si.
-Não crie contradições (ex: sem mortes por afogamento no meio de uma biblioteca seca, ou incêndios debaixo da chuva).
-Tudo deve fazer sentido e estar bem costurado.
+Gere UM mistério curto, atmosférico e logicamente consistente por execução.
 
-Regras:
-1. Escolha SECRETAMENTE culpado, arma e local — NÃO os revele na história.
-2. Escreva 3 parágrafos que plantem pistas SUTIS mas não óbvias.
-3. Crie um álibi incompleto diferente para cada personagem.
-4. Responda SOMENTE com JSON válido. Sem markdown. Sem texto extra.
+O cenário NÃO está limitado a mansões — pode ser qualquer ambiente realista.
 
-Formato:
+Regras de construção:
+Crie exatamente 3 personagens únicos, com:
+nome inventado
+papel coerente com o ambiente
+gênero ("m" ou "f")
+
+Crie:
+3 armas possíveis
+3 locais possíveis dentro do mesmo cenário
+
+REGRA DE COERÊNCIA CRÍTICA (OBRIGATÓRIA):
+Tudo deve ser coerente entre si e plausível.
+
+Lógica do mistério:
+Escolha secretamente:
+1 culpado
+1 arma usada
+1 local do crime
+
+NÃO revele explicitamente quem é o culpado.
+
+História:
+Escreva 2 parágrafos atmosféricos com pistas sutis.
+
+Álibis:
+Cada personagem deve ter um álibi curto, plausível e com brecha.
+
+Saída:
+Responda APENAS com JSON válido.
+
+Formato JSON:
+
 {{
-  "historia": "3 parágrafos atmosféricos",
-  "personagens": [
-    {{"id": "p1", "nome": "Nome Inventado", "papel": "papel na mansão", "genero": "m"}},
-    {{"id": "p2", "nome": "Nome Inventado", "papel": "papel na mansão", "genero": "f"}},
-    {{"id": "p3", "nome": "Nome Inventado", "papel": "papel na mansão", "genero": "m"}}
-  ],
-  "culpado_id": "p1",
+"historia": "2 parágrafos atmosféricos",
+"personagens": [
+{{"id": "p1", "nome": "Nome Inventado", "papel": "papel no cenário", "genero": "m"}},
+{{"id": "p2", "nome": "Nome Inventado", "papel": "papel no cenário", "genero": "f"}},
+{{"id": "p3", "nome": "Nome Inventado", "papel": "papel no cenário", "genero": "m"}}
+],
+"culpado_id": "p1",
 
-  "armas": [
-    {{"id": "a1", "nome": "Nome da arma inventada"}},
-    {{"id": "a2", "nome": "Nome da arma inventada"}},
-    {{"id": "a3", "nome": "Nome da arma inventada"}}
-  ],
+"armas": [
+{{"id": "a1", "nome": "Nome da arma"}},
+{{"id": "a2", "nome": "Nome da arma"}},
+{{"id": "a3", "nome": "Nome da arma"}}
+],
 "arma_usada_id": "a1",
 
-  "locais": [
-    {{"id": "l1", "nome": "Nome do local inventado"}},
-    {{"id": "l2", "nome": "Nome do local inventado"}},
-    {{"id": "l3", "nome": "Nome do local inventado"}}
-  ]
+"locais": [
+{{"id": "l1", "nome": "Nome do local"}},
+{{"id": "l2", "nome": "Nome do local"}},
+{{"id": "l3", "nome": "Nome do local"}}
+],
 "local_crime_id": "l1",
 
-  "alibis": {{
-    "p1": "alibi curto",
-    "p2": "alibi curto",
-    "p3": "alibi curto"
-  }}
+"alibis": {{
+"p1": "alibi curto",
+"p2": "alibi curto",
+"p3": "alibi curto"
+}}
 }}"""),
     ("human", "Gere o mistério agora."),
 ])
@@ -180,11 +201,14 @@ def criar_historia(state: EstadoJogo) -> None:
     state.locais =      data["locais"]   
 
     culpado = state.get_personagem(data["culpado_id"])
+    arma = state.get_arma(data["arma_usada_id"])
+    local = state.get_local(data["local_crime_id"])
+    
     state.solucao = {
         "pessoa_id": data["culpado_id"],
         "pessoa":    culpado["nome"],
-        "arma":      data["arma_usada_id"],
-        "local":     data["local_crime_id"],
+        "arma":      arma["nome"],
+        "local":     local["nome"],
     }
     state.alibis = data.get("alibis", {})  
 

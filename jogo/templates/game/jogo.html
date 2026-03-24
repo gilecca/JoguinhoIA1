@@ -1,78 +1,12 @@
 {% extends "game/base.html" %}
 {% load static %}
-{% block title %}Murdle — Investigação{% endblock %}
+{% block title %}Investigação{% endblock %}
 
 {% block extra_css %}
-
+<link rel="stylesheet" href="{% static 'css/jogo.css' %}">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-:root {
-  --px: 3px;
-  --green:   #1a5c1a;
-  --green2:  #2d8c2d;
-  --grass:   #3cb34a;
-  --sky:     #1a1a2e;
-  --sky2:    #16213e;
-  --gold:    #f0a000;
-  --gold2:   #ffd060;
-  --cream:   #f0e8c8;
-  --blood:   #8b0000;
-  --stone:   #484848;
-  --stone2:  #686868;
-  --window:  #4080c0;
-  --border:  #000;
-  --text:    #f0e8c8;
-  --shadow:  rgba(0,0,0,.7);
-  --ui-bg:   #0a0a18;
-  --ui-border:#f0a000;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; image-rendering: pixelated; }
-
-body {
-  font-family: 'Press Start 2P', monospace;
-  background: var(--ui-bg);
-  color: var(--text);
-  overflow-x: hidden;
-}
-
-#game-canvas {
-  width: 100%;
-  max-width: 1200px;   /* bem maior */
-  margin: 20px auto;
-  position: relative;
-}
-
-#scene {
-  width: 100%;
-  height: 60vh;
-  aspect-ratio: 16/9;
-  position: relative;
-  overflow: hidden;
-  border: 3px solid var(--ui-border);
-  border-bottom: none;
-  background: #000;
-}
-
-.lightning {
-  position: absolute; top: 0; left: 50%; width: 3px; height: 60%;
-  background: #fff8; transform-origin: top;
-  clip-path: polygon(0 0,3px 0,8px 40%,5px 40%,10px 100%,7px 100%,3px 50%,6px 50%);
-  animation: bolt 8s infinite;
-  opacity: 0; z-index: 2;
-}
-@keyframes bolt { 0%,94%,100%{opacity:0} 95%,97%{opacity:1} 96%,98%{opacity:0} }
-
-.rain {
-  position: absolute; inset: 0; pointer-events: none;
-  background-image: repeating-linear-gradient(175deg, transparent 0, transparent 4px, rgba(180,200,255,.18) 4px, rgba(180,200,255,.18) 5px);
-  background-size: 20px 20px;
-  animation: rainfall .4s linear infinite;
-  z-index: 3;
-
-}
 @keyframes rainfall { to { background-position: 0 40px; } }
+
 
 .game-background {
   position: absolute; inset: 0;
@@ -84,303 +18,6 @@ body {
   z-index: 1;
  
 }
-
-/* ── DIALOGUE BOX ── */
-#dialogue-box {
-  width: 100%;
-  background: var(--ui-bg);
-  border: 3px solid var(--ui-border);
-  border-top: none;
-  padding: 10px 14px 12px;
-  min-height: 110px;
-  position: relative;
-  display: flex;          /* adiciona */
-  align-items: flex-start; /* adiciona */
-  gap: 12px;              /* adiciona */
-}
-
-.dlg-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.dlg-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.dlg-name {
-  font-size: 7px; letter-spacing: 1px;
-  color: var(--gold2);
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--gold);
-  padding-bottom: 3px;
-}
-.dlg-portrait {
-  width: 96px;
-  height: 96px;
-  image-rendering: pixelated;
-  background: transparent;
-  border: none;
-  flex-shrink: 0;
-}
-.dlg-text {
-  font-size: 10px; line-height: 1.9;
-  color: var(--cream);
-  min-height: 40px;
-}
-.dlg-text .cursor {
-  display: inline-block;
-  width: 7px; height: 10px;
-  background: var(--cream);
-  animation: blink .6s step-end infinite;
-  vertical-align: bottom; margin-left: 2px;
-}
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-
-.dlg-arrow {
-  position: absolute; bottom: 8px; right: 12px;
-  font-size: 8px; color: var(--gold);
-  animation: bounce-arrow .8s infinite;
-}
-@keyframes bounce-arrow { 0%,100%{transform:translateY(0)} 50%{transform:translateY(3px)} }
-
-/* ── HUD ── */
-#hud {
-  width: 100%;
-  margin: 0 auto;
-  background: #0f0f1e;
-  border: 3px solid var(--ui-border);
-  border-top: none;
-  padding: 6px 14px;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 8px; flex-wrap: wrap;
-}
-.hud-label { font-size: 8px; color: var(--gold); letter-spacing: 1px; }
-.hud-val   { font-size: 8px; color: var(--cream); margin-top: 2px; }
-.hud-hearts { display: flex; gap: 3px; }
-.heart { font-size: 15px; line-height: 1; }
-.heart.empty { opacity: .25; }
-
-/* ── MENU ── */
-#menu-panel {
-  width: 100%;
-  margin: 0 auto;
-  background: #0f0f1e;
-  border: 3px solid var(--ui-border);
-  border-top: none;
-  padding: 8px 14px 12px;
-}
-.menu-tabs { display: flex; gap: 2px; margin-bottom: 8px; }
-.mtab {
-  padding: 5px 10px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px; letter-spacing: .5px;
-  background: #1a1a30;
-  border: 2px solid #333;
-  color: #888; cursor: pointer;
-  transition: all .1s;
-  text-transform: uppercase;
-}
-.mtab:hover { border-color: var(--gold); color: var(--gold); }
-.mtab.active { background: #2a2a50; border-color: var(--gold2); color: var(--gold2); }
-
-.mpanel { display: none; }
-.mpanel.active { display: block; }
-
-/* ── SUSPECTS ── */
-.suspects-grid {
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px; 
-    margin-bottom: 20px;
-    flex-grow: 1; /* Faz a grid ocupar o espaço de cima */
-    overflow-y: auto; /* Se tiver muitos suspeitos, cria scroll só neles */
-}
-.sus-card {
-  background: #1a1a30;
-  border: 2px solid #333;
-  padding: 8px 6px; text-align: center;
-  cursor: pointer; transition: border-color .1s;
-
-}
-.sus-card:hover { border-color: var(--gold); }
-.sus-card.selected { border-color: var(--gold2); background: #2a2050; }
-.sus-avatar {
-  width: 10vw; height: auto;
-  margin: 0 auto 4px;
-  display: block;
-  image-rendering: pixelated;
-}
-.sus-name  { font-size: 9px; color: var(--cream); }
-.sus-papel { font-size: 8px; color: #888; margin-top: 4px; }
-
-/* ── INPUT ── */
-.q-area { 
-    display: flex; 
-    gap: 10px; 
-    align-items: center; /* Alinha o botão com o centro da textarea */
-    margin-top: auto; /* Empurra para o fim do container flex */
-    padding-top: 15px;
-    border-top: 1px solid #333; /* Opcional: uma linha sutil para separar */
-}
-
-.q-area textarea {
-    flex: 1; 
-    height: 60px; /* Um pouco mais alto para facilitar a leitura */
-    background: #1a1a30; 
-    border: 2px solid #444;
-    color: var(--cream);
-    font-family: 'Press Start 2P', monospace;
-    font-size: 8px; 
-    padding: 10px; 
-    resize: none; 
-    outline: none;
-}
-.q-area textarea:focus { border-color: var(--gold); }
-.q-area textarea::placeholder { color: #555; }
-
-.rpg-btn {
-  padding: 8px 10px;
-  background: #2a1a00;
-  border: 2px solid var(--gold);
-  color: var(--gold2);
-  font-family: 'Press Start 2P', monospace;
-  font-size: 5px; cursor: pointer;
-  transition: all .1s; white-space: nowrap;
-  text-transform: uppercase;
-}
-.rpg-btn:hover { background: var(--gold); color: #000; }
-.rpg-btn:disabled { opacity: .4; cursor: not-allowed; }
-.rpg-btn.danger { border-color: #c00; color: #f66; background: #1a0000; }
-.rpg-btn.danger:hover { background: #c00; color: #fff; }
-
-/* ── ACCUSATION ── */
-.acc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px; }
-.acc-group { display: flex; flex-direction: column; gap: 4px; }
-.acc-group label { font-size: 10px; color: var(--gold); letter-spacing: .5px; }
-.acc-group select {
-  background: #1a1a30; border: 2px solid #444;
-  color: var(--cream); font-family: 'Press Start 2P', monospace;
-  font-size: 10px; padding: 5px 4px; outline: none;
-  appearance: none; cursor: pointer;
-}
-.acc-group select:focus { border-color: var(--gold); }
-option { background: #0f0f1e; }
-
-/* ── LOG ── */
-/* ── LOG ── */
-.log-list {
-  max-height: 400px; 
-  overflow-y: auto;
-  display: flex; 
-  flex-direction: column; 
-  gap: 20px; /* Aumentei o espaço entre cada par de pergunta/resposta */
-  padding: 10px;
-}
-
-.log-list::-webkit-scrollbar { width: 4px; }
-.log-list::-webkit-scrollbar-thumb { background: var(--gold); }
-
-.log-entry-item { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 8px; 
-  padding-bottom: 15px;
-  border-bottom: 1px solid #222; /* Linha sutil para separar os blocos de conversa */
-}
-
-.log-who { 
-  font-size: 10px; 
-  color: var(--gold); 
-  margin-bottom: 4px; 
-  letter-spacing: 1px;
-  font-weight: bold;
-}
-
-.log-q { 
-  font-size: 10px; 
-  color: #aaa; 
-  padding: 8px 12px; 
-  background: #0a0a0a; 
-  border-left: 3px solid #444; 
-  margin-left: 10px;
-  line-height: 1.4;
-}
-
-.log-r { 
-  font-size: 10px; 
-  color: var(--cream); 
-  padding: 8px 12px; 
-  background: #161625; 
-  border-left: 3px solid var(--blood); 
-  margin-left: 10px;
-  line-height: 1.6;
-}
-
-.log-empty { font-size: 10px; color: #555; font-style: italic; text-align: center; margin-top: 20px; }
-
-/* ── RESULT ── */
-#result-overlay {
-  position: fixed; inset: 0; z-index: 200;
-  background: rgba(0,0,0,.92);
-  display: flex; align-items: center; justify-content: center;
-  padding: 1rem;
-}
-.result-window {
-  max-width: 400px; width: 100%;
-  background: #0f0f1e;
-  border: 4px solid var(--ui-border);
-  padding: 24px 20px; text-align: center;
-}
-.result-sprite { display: flex; justify-content: center; margin-bottom: 12px; gap: 12px; }
-.result-title { font-size: 13px; margin-bottom: 8px; animation: title-flash 1s infinite; }
-.result-title.win  { color: var(--gold2); }
-.result-title.lose { color: #c00; }
-@keyframes title-flash { 0%,100%{opacity:1} 50%{opacity:.7} }
-.result-sub { font-size: 8px; color: #888; margin-bottom: 16px; line-height: 2; }
-.sol-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-.sol-table td { font-size: 10px; padding: 5px 8px; border: 1px solid #333; }
-.sol-table .sol-key { color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
-.sol-table .sol-val { color: var(--cream); text-transform: capitalize; }
-.result-blink { animation: blink .8s step-end infinite; font-size: 12px; color: var(--gold); }
-
-/* ── LOADING DOTS ── */
-.ldots span {
-  display: inline-block; width: 4px; height: 4px;
-  background: var(--gold); margin: 0 2px;
-  animation: blink 1s infinite;
-}
-.ldots span:nth-child(2) { animation-delay: .2s; }
-.ldots span:nth-child(3) { animation-delay: .4s; }
-
-/* ── START ── */
-#start-overlay {
-  position: fixed; inset: 0; z-index: 100;
-  background: #0f0f1e;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 16px;
-  text-align: center;
-}
-.title-big {
-  font-size: clamp(18px, 5vw, 28px);
-  color: var(--gold2);
-  text-shadow: 3px 3px 0 var(--gold), 6px 6px 0 #5a3000;
-  animation: title-flash 2s infinite;
-}
-.start-sub { font-size: 6px; color: #888; line-height: 2.5; max-width: 320px; }
-
-@media (max-width: 480px) {
-  .acc-grid { grid-template-columns: 1fr; }
-  .dlg-text { font-size: 5px; }
-  .sus-avatar { width: 64px; height: 64px; }
-}
-
-.press { font-size: 10px; color: #f0e8c8; animation: blink 1s step-end infinite; margin-top: .5rem; }
 </style>
 {% endblock %}
 
@@ -391,7 +28,7 @@ option { background: #0f0f1e; }
 
 <!-- ── START SCREEN ── -->
 <div id="start-overlay">
-  <div>
+  <!--<div>
     <img src="{% static 'img/detetive.png' %}" width="200" height="200"
          style="image-rendering:pixelated; margin-bottom:16px;">
   </div>
@@ -405,9 +42,10 @@ option { background: #0f0f1e; }
     ▶ PRESS START
   </button>
   <div class="press">PRESS START</div>
+  -->
 </div>
 
-<!-- ── GAME CANVAS ── -->
+
 <div id="game-canvas" style="display:none;">
 
   <div id="scene">
@@ -416,7 +54,7 @@ option { background: #0f0f1e; }
     <div class="rain"></div>
   </div>
 
-  <!-- Dialogue box -->
+
 <div id="dialogue-box">
   <div class="dlg-header">
     <canvas class="dlg-portrait" id="dlg-portrait" width="96" height="96"></canvas>
@@ -430,7 +68,7 @@ option { background: #0f0f1e; }
   <div class="dlg-arrow" id="dlg-arrow" style="display:none;">▼</div>
 </div>
 
-  <!-- HUD -->
+
   <div id="hud">
     <div>
       <div class="hud-label">TENTATIVAS</div>
@@ -917,6 +555,10 @@ document.addEventListener('DOMContentLoaded', function() {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askSuspect(); }
     });
   }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  startGame();
 });
 </script>
 {% endblock %}

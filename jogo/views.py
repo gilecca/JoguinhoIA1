@@ -1,5 +1,5 @@
 """
-views.py — Views Django do jogo Murdle.
+views.py 
 """
 
 import json
@@ -15,7 +15,7 @@ from .agents import (
     interrogar_suspeito, gerar_dica, verificar_tentativa,
 )
 
-# carrega variáveis do .env
+
 load_dotenv()
 
 SESSION_KEY = "murdle_estado"
@@ -31,13 +31,11 @@ def _save_state(request, state: EstadoJogo):
     request.session.modified = True
 
 
-# ── Tela inicial ─────────────────────────────────────────
 
 def index(request):
     return render(request, "game/index.html")
 
 
-# ── Criar novo jogo ──────────────────────────────────────
 
 @require_POST
 def novo_jogo(request):
@@ -51,7 +49,6 @@ def novo_jogo(request):
             {"erro": "GOOGLE_API_KEY não encontrada no .env"}
         )
 
-    # garante que a key esteja disponível para os agentes
     os.environ["GOOGLE_API_KEY"] = api_key
 
     state = EstadoJogo()
@@ -65,7 +62,6 @@ def novo_jogo(request):
     return redirect("jogo")
 
 
-# ── Tela principal ───────────────────────────────────────
 
 @require_GET
 def jogo(request):
@@ -82,8 +78,8 @@ def jogo(request):
         "game_over": state.game_over,
         "vitoria": state.vitoria,
         "solucao": state.solucao if state.game_over else None,
-        "personagens_lista": state.personagens,      # [{"id","nome","papel","genero"}]
-        "personagens_nomes": [p["nome"] for p in state.personagens],     # para os selects
+        "personagens_lista": state.personagens,      
+        "personagens_nomes": [p["nome"] for p in state.personagens],    
         "armas": state.armas,
         "armas_nomes": [p["nome"] for p in state.armas],  
         "locais": state.locais,
@@ -91,11 +87,9 @@ def jogo(request):
         "dots": ["used" if i < state.tentativas else "remaining"
                 for i in range(state.max_tentativas)],
     }
-
+    print(state.historia)
     return render(request, "game/jogo.html", ctx)
 
-
-# ── AJAX: Interrogar ─────────────────────────────────────
 
 @require_POST
 def interrogar(request):
@@ -141,7 +135,6 @@ def interrogar(request):
     })
 
 
-# ── AJAX: Acusar ─────────────────────────────────────────
 
 @require_POST
 def acusar(request):
@@ -225,7 +218,6 @@ def acusar(request):
     return JsonResponse(resp)
 
 
-# ── Reiniciar ────────────────────────────────────────────
 
 @require_POST
 def reiniciar(request):
