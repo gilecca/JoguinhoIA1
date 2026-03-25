@@ -1,13 +1,4 @@
-"""
-agents.py — Lógica dos agentes LLM do jogo Murdle.
 
-Três agentes:
-  Agent 1 - Narrador: gera a história, solução secreta e alibis
-  Agent 2 - Suspeito: responde interrogatórios em personagem
-  Agent 3 - Investigador: analisa tentativas e gera dicas contextuais
-
-O EstadoJogo é serializado na sessão Django entre requests.
-"""
 
 import json
 from langchain_core.prompts import ChatPromptTemplate
@@ -15,11 +6,6 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 import os
 
 from langchain_openai import ChatOpenAI
-
-
-# ==============================
-# LLM
-# ==============================
 
 def get_llm():
     return ChatGoogleGenerativeAI(
@@ -113,7 +99,7 @@ class EstadoJogo:
 
 _story_prompt = ChatPromptTemplate.from_messages([
     ("system", """Você é o narrador de um jogo de mistério de assassinato no estilo Murdle.
-
+     
 Gere UM mistério curto, atmosférico e logicamente consistente por execução.
 
 O cenário NÃO está limitado a mansões — pode ser qualquer ambiente realista.
@@ -275,7 +261,7 @@ def interrogar_suspeito(pid: str, pergunta: str, state: EstadoJogo) -> str:
 
 
 # ==============================
-# AGENTE 3 — Investigador / Gerador de Dicas
+# AGENTE 3 — / Gerador de Dicas
 # ==============================
 
 _hint_prompt = ChatPromptTemplate.from_messages([

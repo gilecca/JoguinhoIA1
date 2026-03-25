@@ -197,7 +197,7 @@
 <div id="result-overlay">
   <div class="result-window">
     <div class="result-sprite">
-      <img src="{% static 'img/detetive.png' %}" width="52" height="52" style="image-rendering:pixelated;">
+      <img src="{% static 'img/cachorro.png' %}" width="52" height="52" style="image-rendering:pixelated;">
       {% if vitoria %}
       <div style="font-size:32px; align-self:center;">🏆</div>
       {% else %}
@@ -236,7 +236,7 @@
 
 {% block extra_js %}
 <script>
-// ── Personagens via json_script — sem problema de vírgula ou caractere especial ──
+// ── Personagens via json_script 
 const PERSONAGENS_RAW = JSON.parse(
   document.getElementById('personagens-data').textContent
 );
@@ -246,12 +246,11 @@ PERSONAGENS_RAW.forEach(function(p) {
   PERSONAGENS[p.id] = { nome: p.nome, genero: p.genero, papel: p.papel };
 });
 
-// ── Caminhos das imagens ──────────────────────────────────────────────────
-const IMG_DETETIVE = '{% static "img/detetive.png" %}';
+const IMG_DETETIVE = '{% static "img/cachorro.png" %}';
 const IMG_M        = '{% static "img/menino.png" %}';
 const IMG_F        = '{% static "img/menina2.png" %}';
 
-// Detetive → cachorro | suspeito → imagem pelo gênero vindo do LLM
+
 function getPortraitSrc(pid) {
   if (pid === 'detetive') return IMG_DETETIVE;
   var p = PERSONAGENS[pid];
@@ -275,32 +274,37 @@ function carregarHistoria() {
   }).filter(Boolean);
 }
 
-function narrarHistoria() {
+
+const esperarClique = () => {
+  return new Promise((resolve) => {
+    document.addEventListener('click', () => resolve(), { once: true });
+  });
+};
+
+const esperarTempo = (ms) => new Promise(res => setTimeout(res, ms));
+
+async function narrarHistoria() {
   if (historiaIndex >= historiaParas.length) return;
 
-  var texto = historiaParas[historiaIndex];
+  const texto = historiaParas[historiaIndex];
   typeText(texto, 'detetive');
 
-  // Aguarda a seta aparecer e captura o próximo clique para avançar
-  var arrowEl = document.getElementById('dlg-arrow');
-  var aguardar = setInterval(function() {
-    if (arrowEl.style.display === 'block') {
-      clearInterval(aguardar);
-      // Delay pequeno para não capturar o mesmo clique que abriu o jogo
-      setTimeout(function() {
-        document.addEventListener('click', function avanca() {
-          document.removeEventListener('click', avanca);
-          historiaIndex++;
-          narrarHistoria();
-        }, { once: true });
-      }, 250);
-    }
-  }, 100);
-}
+  const arrowEl = document.getElementById('dlg-arrow');
+  
+  while (arrowEl.style.display !== 'block') {
+    await esperarTempo(100); // Espera 100ms antes de checar de novo
+  }
 
+  await esperarTempo(250);
+
+  await esperarClique();
+
+  historiaIndex++;
+  narrarHistoria(); 
+}
 // ── Typewriter ────────────────────────────────────────────────────────────
 function typeText(texto, pid) {
-  // Para digitação anterior
+ 
   if (typingTimer) { clearInterval(typingTimer); typingTimer = null; }
 
   var nameEl     = document.getElementById('dlg-name');
@@ -308,7 +312,7 @@ function typeText(texto, pid) {
   var arrowEl    = document.getElementById('dlg-arrow');
   var portraitEl = document.getElementById('dlg-portrait');
 
-  // Define nome no header
+
   if (pid === 'detetive') {
     nameEl.textContent = 'DETETIVE';
   } else {

@@ -181,25 +181,18 @@ def acusar(request):
     }
 
     if resultado == "acertou":
-
         state.tentativas += 1
         state.game_over = True
         state.vitoria = True
-
         resp["tentativas"] = state.tentativas
         resp["solucao"] = state.solucao
-
     else:
-
         state.tentativas += 1
         resp["tentativas"] = state.tentativas
-
         if state.tentativas >= state.max_tentativas:
-
             state.game_over = True
             state.vitoria = False
             resp["solucao"] = state.solucao
-
         else:
 
             try:
